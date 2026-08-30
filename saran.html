@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kotak Saran Masyarakat</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{colors:{bg:'#050505',surface:'#121212',card:'#0A0A0A',primary:'#F7F8F8',secondary:'#8A8F98',accent:'#5E6AD2',green:'#4DAF73',red:'#D45454',border:'#222222'}}}}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#050505;color:#F7F8F8;min-height:100vh}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0A0A0A}::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes successPop{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.fade-up{animation:fadeUp .8s ease-out forwards;opacity:0}
+.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.4s}.d5{animation-delay:.5s}
+.inp{background:#0A0A0A;border:1px solid #222;color:#F7F8F8;padding:14px 18px;border-radius:12px;width:100%;font-family:'Inter',sans-serif;font-size:15px;transition:all .3s;outline:none}
+.inp:focus{border-color:#5E6AD2;box-shadow:0 0 0 4px rgba(94,106,210,.12)}
+.inp::placeholder{color:#444}
+textarea.inp{resize:vertical;min-height:140px;line-height:1.6}
+.btn{padding:14px 28px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:all .3s;border:none;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.btn-accent{background:linear-gradient(135deg,#5E6AD2,#4E5AC2);color:#fff;box-shadow:0 4px 20px rgba(94,106,210,.3)}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(94,106,210,.4)}
+.btn-accent:active{transform:translateY(0)}
+.btn-accent:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;border:1px solid #333;color:#F7F8F8}
+.btn-outline:hover{border-color:#5E6AD2;color:#5E6AD2}
+
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);padding:16px 28px;border-radius:14px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:all .5s cubic-bezier(.22,1,.36,1);max-width:90vw;text-align:center;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-success{background:#4DAF73;color:#fff;box-shadow:0 10px 40px rgba(77,175,115,.3)}
+.toast-error{background:#D45454;color:#fff;box-shadow:0 10px 40px rgba(212,84,84,.3)}
+
+.success-screen{display:none;text-align:center;padding:40px 20px}
+.success-screen.show{display:block;animation:successPop .5s ease-out}
+.success-icon{width:80px;height:80px;border-radius:50%;background:rgba(77,175,115,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;color:#4DAF73}
+
+.glow-line{height:1px;background:linear-gradient(90deg,transparent,#5E6AD2,transparent);margin:30px 0}
+
+.char-count{font-size:12px;color:#555;text-align:right;margin-top:6px;transition:color .3s}
+.char-count.warn{color:#E2B340}
+.char-count.danger{color:#D45454}
+
+.info-card{background:linear-gradient(135deg,rgba(94,106,210,.08),rgba(77,175,115,.05));border:1px solid rgba(94,106,210,.2);border-radius:14px;padding:20px}
+.info-card ol{list-style:decimal;padding-left:20px}
+.info-card li{font-size:13px;color:#8A8F98;line-height:1.8}
+
+@media(max-width:640px){
+  .inp{padding:12px 14px;font-size:14px}
+  .btn{padding:12px 20px;font-size:14px}
+  .success-icon{width:64px;height:64px;font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<div class="min-h-screen flex items-center justify-center px-4 py-10">
+<div class="w-full max-w-lg">
+
+  <!-- HEADER -->
+  <div class="text-center mb-8 fade-up">
+    <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/10 border border-accent/20 mb-5" style="animation:float 3s ease-in-out infinite">
+      <i class="fa-solid fa-comment-dots text-accent text-3xl"></i>
+    </div>
+    <h1 class="text-3xl font-extrabold mb-2 fade-up d1">Kotak Saran</h1>
+    <p class="text-secondary text-sm fade-up d2">Sampaikan aspirasi Anda untuk kemajuan lingkungan</p>
+  </div>
+
+  <div class="glow-line fade-up d2"></div>
+
+  <!-- FORM -->
+  <div id="formSection" class="fade-up d3">
+    <div class="space-y-5">
+      <div>
+        <label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block">
+          <i class="fa-solid fa-user mr-1 text-accent"></i>Nama Lengkap <span class="text-red/60 font-normal">(Opsional)</span>
+        </label>
+        <input type="text" class="inp" id="inputNama" placeholder="Masukkan nama Anda..." maxlength="100">
+      </div>
+
+      <div>
+        <label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block">
+          <i class="fa-solid fa-pen mr-1 text-accent"></i>Saran / Masukan <span class="text-red">*</span>
+        </label>
+        <textarea class="inp" id="inputPesan" placeholder="Tulis saran, masukan, atau kritik Anda di sini..." maxlength="2000" oninput="updateCharCount()"></textarea>
+        <div class="char-count" id="charCount">0 / 2000 karakter</div>
+      </div>
+
+      <button class="btn btn-accent w-full" id="btnKirim" onclick="kirimSaran()">
+        <i class="fa-solid fa-paper-plane"></i>Kirim Saran
+      </button>
+    </div>
+
+    <!-- INFO -->
+    <div class="info-card mt-6 fade-up d4">
+      <div class="text-xs text-accent font-semibold uppercase tracking-wider mb-3">
+        <i class="fa-solid fa-circle-info mr-1"></i>Informasi
+      </div>
+      <ol>
+        <li>Saran Anda bersifat <b class="text-primary">rahasia</b> dan hanya akan dibacakan saat rapat pengurus</li>
+        <li>Saran <b class="text-primary">tidak ditampilkan secara publik</b></li>
+        <li>Anda bisa mengirim saran <b class="text-primary">lebih dari satu kali</b></li>
+        <li>Identitas Anda dilindungi — boleh <b class="text-primary">anonim</b></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <h2 class="text-2xl font-bold mb-2">Saran Terkirim</h2>
+    <p class="text-secondary text-sm mb-8 max-w-sm mx-auto">Terima kasih atas partisipasi Anda. Saran akan disampaikan kepada pengurus pada rapat berikutnya.</p>
+
+    <div class="glow-line"></div>
+
+    <button class="btn btn-outline w-full mt-6" onclick="kirimLagi()">
+      <i class="fa-solid fa-rotate-left"></i>Kirim Saran Lagi
+    </button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="text-center mt-10 fade-up d5">
+    <p class="text-xs text-secondary/40">Kotak Saran Digital — Untuk Masyarakat Setempat</p>
+    <p class="text-[10px] text-secondary/25 mt-1">Data tersimpan secara lokal & aman</p>
+  </div>
+
+</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SRK = 'lpj_saran';
+const MAX_CHAR = 2000;
+
+// ==================== CHAR COUNT ====================
+function updateCharCount(){
+  const len = document.getElementById('inputPesan').value.length;
+  const el = document.getElementById('charCount');
+  el.textContent = len + ' / ' + MAX_CHAR + ' karakter';
+  el.className = 'char-count' + (len > MAX_CHAR * 0.9 ? ' danger' : len > MAX_CHAR * 0.75 ? ' warn' : '');
+}
+
+// ==================== TOAST ====================
+function showToast(msg, type){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast toast-' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// ==================== KIRIM SARAN ====================
+function kirimSaran(){
+  const nama = document.getElementById('inputNama').value.trim();
+  const pesan = document.getElementById('inputPesan').value.trim();
+  const btn = document.getElementById('btnKirim');
+
+  // Validasi
+  if(!pesan){
+    showToast('Saran tidak boleh kosong', 'error');
+    document.getElementById('inputPesan').focus();
+    document.getElementById('inputPesan').style.borderColor = '#D45454';
+    setTimeout(() => document.getElementById('inputPesan').style.borderColor = '', 2000);
+    return;
+  }
+
+  if(pesan.length < 10){
+    showToast('Saran terlalu singkat, minimal 10 karakter', 'error');
+    document.getElementById('inputPesan').focus();
+    return;
+  }
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Mengirim...';
+
+  // Simulasi delay biar terasa proses (200ms)
+  setTimeout(() => {
+    try {
+      // Ambil data lama
+      let list = [];
+      try { list = JSON.parse(localStorage.getItem(SRK) || '[]'); } catch(e) {}
+
+      // Buat timestamp
+      const now = new Date();
+      const waktu = now.toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      }) + ' pukul ' + now.toLocaleTimeString('id-ID', {
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      // Push saran baru
+      list.push({
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+        nama: nama || 'Anonim',
+        pesan: pesan,
+        waktu: waktu
+      });
+
+      // Simpan
+      localStorage.setItem(SRK, JSON.stringify(list));
+
+      // Tampilkan sukses
+      document.getElementById('formSection').style.display = 'none';
+      document.getElementById('successScreen').classList.add('show');
+      showToast('Saran berhasil dikirim!', 'success');
+
+    } catch(e) {
+      showToast('Gagal mengirim. Coba lagi.', 'error');
+    }
+
+    // Reset button
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>Kirim Saran';
+  }, 300);
+}
+
+// ==================== KIRIM LAGI ====================
+function kirimLagi(){
+  document.getElementById('inputNama').value = '';
+  document.getElementById('inputPesan').value = '';
+  updateCharCount();
+  document.getElementById('successScreen').classList.remove('show');
+  document.getElementById('formSection').style.display = '';
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  updateCharCount();
+
+  // Auto-focus ke textarea
+  setTimeout(() => {
+    document.getElementById('inputPesan').focus();
+  }, 1000);
+});
+</script>
+</body>
+</html>
