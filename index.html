@@ -89,9 +89,24 @@ tr:hover td{background:#0c0c0c}
 .sc{background:linear-gradient(135deg,#0A0A0A,#121212);border:1px solid #222;border-radius:10px;padding:14px;text-align:center}
 .sc .n{font-size:18px;font-weight:800;background:linear-gradient(135deg,#5E6AD2,#4DAF73);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .sc .l{font-size:10px;color:#8A8F98;margin-top:2px}
-.saran-item{background:#111;border:1px solid #222;border-radius:10px;padding:14px;margin-bottom:8px}
-.saran-item .time{font-size:11px;color:#555}
-.saran-item .msg{font-size:13px;margin-top:5px;line-height:1.5}
+/* Kotak Saran — dipisahkan visual dari laporan LPJ */
+.saran-wrap{border:1px dashed #5E6AD2;border-radius:14px;padding:24px;background:#0A0A0A}
+.saran-wrap .saran-head-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.saran-wrap .saran-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px;margin:0}
+.saran-wrap .saran-title i{color:#5E6AD2;font-size:14px}
+.saran-count{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(94,106,210,.15);color:#5E6AD2}
+.saran-list{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;padding-right:4px}
+.saran-empty{text-align:center;padding:32px 16px;color:#555;font-size:13px}
+.saran-empty i{font-size:32px;display:block;margin-bottom:10px;opacity:.4}
+.saran-item{background:#111;border:1px solid #222;border-radius:10px;padding:14px;transition:border-color .2s,transform .2s;animation:fadeIn .3s ease-out}
+.saran-item:hover{border-color:#333;transform:translateY(-1px)}
+.saran-item .saran-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #1a1a1a}
+.saran-item .saran-no{font-size:10px;font-weight:700;background:#1a1a1a;color:#8A8F98;padding:2px 8px;border-radius:10px;flex-shrink:0}
+.saran-item .saran-nama{font-size:12px;color:#F7F8F8;font-weight:600;flex:1;min-width:0;display:flex;align-items:center;gap:6px}
+.saran-item .saran-nama i{color:#5E6AD2;font-size:10px}
+.saran-item .saran-time{font-size:11px;color:#555;flex-shrink:0;display:flex;align-items:center;gap:5px}
+.saran-item .saran-time i{font-size:10px}
+.saran-item .saran-msg{font-size:13px;color:#ccc;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
 .fab-wrap{position:fixed;bottom:28px;right:28px;z-index:50;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
 .fab-main{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#5E6AD2,#4E5AC2);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 8px 30px rgba(94,106,210,.4);transition:all .3s;display:flex;align-items:center;justify-content:center}
 .fab-main:hover{transform:scale(1.1);box-shadow:0 12px 40px rgba(94,106,210,.5);animation:pulseGlow 2s infinite}
@@ -258,17 +273,18 @@ tr:hover td{background:#0c0c0c}
 </div>
 </div>
 
-<!-- SARAN -->
+<!-- SARAN (gabung dengan index, posisi tetap terpisah) -->
 <section class="max-w-7xl mx-auto px-4 pb-12 no-print">
-<div style="border:1px dashed #5E6AD2;border-radius:14px;padding:24px;background:#0A0A0A">
-<div class="flex items-center justify-between mb-3">
-<div class="st mb-0"><i class="fa-solid fa-comment-dots"></i>Kotak Saran <span class="badge badge-green ml-2 text-[10px]">Di luar laporan</span></div>
+<div class="saran-wrap">
+<div class="saran-head-bar">
+<div class="saran-title"><i class="fa-solid fa-comment-dots"></i>Kotak Saran <span class="saran-count" id="saranCountBadge">0 saran</span> <span class="badge badge-green ml-2 text-[10px]">Di luar laporan</span></div>
 <div class="flex gap-2">
-<button class="btn btn-outline btn-xs" onclick="loadSaran()"><i class="fa-solid fa-rotate" id="saranRefIcon"></i></button>
-<button class="btn btn-red btn-xs" onclick="if(confirm('Hapus semua?')){localStorage.removeItem('lpj_saran');loadSaran();toast('Dihapus','info')}"><i class="fa-solid fa-trash"></i></button>
+<button class="btn btn-outline btn-xs" onclick="loadSaran()" title="Muat ulang"><i class="fa-solid fa-rotate" id="saranRefIcon"></i></button>
+<button class="btn btn-accent btn-xs" onclick="openSaranModal()" title="QR & Link"><i class="fa-solid fa-qrcode"></i></button>
+<button class="btn btn-red btn-xs" onclick="hapusSemuaSaran()" title="Hapus semua"><i class="fa-solid fa-trash"></i></button>
 </div>
 </div>
-<div id="saranList"><p class="text-secondary text-sm">Belum ada saran.</p></div>
+<div id="saranList" class="saran-list"><p class="saran-empty"><i class="fa-solid fa-inbox"></i>Belum ada saran masuk.</p></div>
 </div>
 </section>
 
@@ -881,34 +897,130 @@ function exportCurrentXLSX(){
 }
 
 // ==================== SARAN ====================
+// Catatan: saran.html menyimpan {id, nama, pesan, waktu}
+//          mode ?saran=1 (lama) menyimpan {msg, ts}
+//          loadSaran harus baca KEDUA format sekaligus agar semua saran tampil.
 function openSaranModal(){
-  var link=window.location.href.split('?')[0]+'?saran=1';
+  var link=window.location.href.split('?')[0].replace(/\/[^\/]*$/,'/saran.html');
   document.getElementById('saranLinkInp').value=link;
   var qrBox=document.getElementById('qrBox');qrBox.innerHTML='';
   var img=document.createElement('img');img.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data='+encodeURIComponent(link);img.alt='QR Code';img.style.borderRadius='8px';qrBox.appendChild(img);
   document.getElementById('saranModal').classList.add('show');
 }
 function copySaranLink(){var inp=document.getElementById('saranLinkInp');inp.select();if(navigator.clipboard){navigator.clipboard.writeText(inp.value).then(function(){toast('Link disalin')})}else{document.execCommand('copy');toast('Link disalin')}}
-function loadSaran(){
-  var ic=document.getElementById('saranRefIcon');ic.classList.add('reload-spin');setTimeout(function(){ic.classList.remove('reload-spin')},800);
-  var list=document.getElementById('saranList');
-  try{var s=localStorage.getItem(SRK);if(!s){list.innerHTML='<p class="text-secondary text-sm">Belum ada saran.</p>';return}
-  var arr=JSON.parse(s);if(!arr.length){list.innerHTML='<p class="text-secondary text-sm">Belum ada saran.</p>';return}
-  arr.sort(function(a,b){return(b.ts||0)-(a.ts||0)});var h='';
-  arr.forEach(function(item){h+='<div class="saran-item"><div class="time">'+(item.ts?new Date(item.ts).toLocaleString('id-ID'):'-')+'</div><div class="msg">'+esc(item.msg)+'</div></div>'});
-  list.innerHTML=h}catch(e){list.innerHTML='<p class="text-secondary text-sm">Gagal memuat.</p>'}
+
+// Ambil timestamp numerik dari item saran (dukung kedua format)
+function saranTs(item){
+  if(item.ts) return item.ts;
+  if(item.id){
+    // id dihasilkan dari Date.now().toString(36) + random — ambil 8 char pertama
+    try{
+      var head=String(item.id).substr(0,8);
+      var n=parseInt(head,36);
+      if(!isNaN(n)) return n;
+    }catch(e){}
+  }
+  if(item.waktu){
+    // fallback: parse string waktu Indonesia
+    try{return new Date(item.waktu.replace(' pukul ',' ')).getTime()}catch(e){}
+  }
+  return 0;
 }
 
-// ==================== SARAN PAGE ====================
+function loadSaran(){
+  var ic=document.getElementById('saranRefIcon');
+  if(ic){ic.classList.add('reload-spin');setTimeout(function(){ic.classList.remove('reload-spin')},800)}
+  var list=document.getElementById('saranList');
+  var badge=document.getElementById('saranCountBadge');
+  try{
+    var s=localStorage.getItem(SRK);
+    if(!s){list.innerHTML='<p class="saran-empty"><i class="fa-solid fa-inbox"></i>Belum ada saran masuk.</p>';if(badge)badge.textContent='0 saran';return}
+    var arr=JSON.parse(s);
+    if(!arr.length){list.innerHTML='<p class="saran-empty"><i class="fa-solid fa-inbox"></i>Belum ada saran masuk.</p>';if(badge)badge.textContent='0 saran';return}
+    // Sort terbaru di atas — pakai timestamp yang sudah dinormalisasi
+    arr.sort(function(a,b){return saranTs(b)-saranTs(a)});
+    if(badge)badge.textContent=arr.length+' saran';
+    var h='';
+    arr.forEach(function(item,idx){
+      // Baca pesan dari pesan (saran.html) atau msg (mode lama)
+      var pesan=item.pesan||item.msg||'';
+      // Baca nama dari nama (saran.html) atau default Anonim
+      var nama=item.nama||'Anonim';
+      // Baca waktu dari waktu (saran.html) atau ts (mode lama)
+      var waktu=item.waktu||(item.ts?new Date(item.ts).toLocaleString('id-ID'):'-');
+      h+='<div class="saran-item">'+
+           '<div class="saran-row">'+
+             '<span class="saran-no">#'+(idx+1)+'</span>'+
+             '<span class="saran-nama"><i class="fa-solid fa-user"></i>'+esc(nama)+'</span>'+
+             '<span class="saran-time"><i class="fa-solid fa-clock"></i>'+esc(waktu)+'</span>'+
+           '</div>'+
+           '<div class="saran-msg">'+esc(pesan)+'</div>'+
+         '</div>';
+    });
+    list.innerHTML=h;
+  }catch(e){
+    list.innerHTML='<p class="saran-empty"><i class="fa-solid fa-triangle-exclamation"></i>Gagal memuat saran: '+esc(e.message)+'</p>';
+    if(badge)badge.textContent='0 saran';
+  }
+}
+
+function hapusSemuaSaran(){
+  if(!confirm('Hapus SEMUA saran yang masuk? Tindakan ini tidak dapat dibatalkan.'))return;
+  localStorage.removeItem(SRK);
+  loadSaran();
+  toast('Semua saran dihapus','info');
+}
+
+function hapusSatuSaran(idx){
+  // Hapus satu item berdasarkan index tampil (setelah sort)
+  if(!confirm('Hapus saran ini?'))return;
+  try{
+    var s=localStorage.getItem(SRK);
+    if(!s)return;
+    var arr=JSON.parse(s);
+    arr.sort(function(a,b){return saranTs(b)-saranTs(a)});
+    if(idx<0||idx>=arr.length)return;
+    arr.splice(idx,1);
+    localStorage.setItem(SRK,JSON.stringify(arr));
+    loadSaran();
+    toast('Saran dihapus','info');
+  }catch(e){}
+}
+
+// ==================== SARAN PAGE (mode ?saran=1) ====================
 (function(){
   var params=new URLSearchParams(window.location.search);
   if(params.get('saran')==='1'){
-    document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#050505;padding:20px"><div style="background:#121212;border:1px solid #222;border-radius:16px;padding:28px;max-width:400px;width:100%"><h2 style="font-size:18px;font-weight:800;margin-bottom:4px;font-family:Inter,sans-serif;color:#F7F8F8">\uD83D\uDCDD Kotak Saran</h2><p style="font-size:12px;color:#8A8F98;margin-bottom:16px">Tulis saran atau masukan Anda</p><textarea id="saranTA" style="width:100%;height:120px;background:#0A0A0A;border:1px solid #222;color:#F7F8F8;border-radius:8px;padding:12px;font-family:Inter,sans-serif;font-size:14px;resize:vertical;outline:none" placeholder="Tulis saran di sini..."></textarea><button onclick="submitSaran()" style="width:100%;margin-top:12px;padding:12px;background:#5E6AD2;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:Inter,sans-serif">Kirim Saran</button><div id="saranDone" style="display:none;text-align:center;padding:20px"><div style="font-size:40px;margin-bottom:8px">\u2705</div><div style="font-weight:700;color:#4DAF73">Terima kasih!</div><div style="font-size:12px;color:#8A8F98;margin-top:4px">Saran Anda telah terkirim</div></div></div></div>';
+    document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#050505;padding:20px"><div style="background:#121212;border:1px solid #222;border-radius:16px;padding:28px;max-width:400px;width:100%"><h2 style="font-size:18px;font-weight:800;margin-bottom:4px;font-family:Inter,sans-serif;color:#F7F8F8">📝 Kotak Saran</h2><p style="font-size:12px;color:#8A8F98;margin-bottom:16px">Tulis saran atau masukan Anda</p><input id="saranNama" style="width:100%;margin-bottom:10px;background:#0A0A0A;border:1px solid #222;color:#F7F8F8;border-radius:8px;padding:12px;font-family:Inter,sans-serif;font-size:14px;outline:none" placeholder="Nama (opsional)"><textarea id="saranTA" style="width:100%;height:120px;background:#0A0A0A;border:1px solid #222;color:#F7F8F8;border-radius:8px;padding:12px;font-family:Inter,sans-serif;font-size:14px;resize:vertical;outline:none" placeholder="Tulis saran di sini..."></textarea><button onclick="submitSaran()" style="width:100%;margin-top:12px;padding:12px;background:#5E6AD2;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:Inter,sans-serif">Kirim Saran</button><div id="saranDone" style="display:none;text-align:center;padding:20px"><div style="font-size:40px;margin-bottom:8px">✅</div><div style="font-weight:700;color:#4DAF73">Terima kasih!</div><div style="font-size:12px;color:#8A8F98;margin-top:4px">Saran Anda telah terkirim</div></div></div></div>';
   }
 })();
+
 function submitSaran(){
-  var msg=document.getElementById('saranTA').value.trim();if(!msg)return;
-  try{var s=localStorage.getItem(SRK);var arr=s?JSON.parse(s):[];arr.push({msg:msg,ts:Date.now()});localStorage.setItem(SRK,JSON.stringify(arr))}catch(e){}
+  var namaEl=document.getElementById('saranNama');
+  var nama=namaEl?namaEl.value.trim():'';
+  var msg=document.getElementById('saranTA').value.trim();
+  if(!msg){
+    toast('Saran tidak boleh kosong','error');
+    return;
+  }
+  if(msg.length<10){
+    toast('Saran terlalu singkat, minimal 10 karakter','error');
+    return;
+  }
+  try{
+    var s=localStorage.getItem(SRK);
+    var arr=s?JSON.parse(s):[];
+    var now=new Date();
+    var waktu=now.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})+' pukul '+now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    arr.push({
+      id: Date.now().toString(36)+Math.random().toString(36).substr(2,5),
+      nama: nama||'Anonim',
+      pesan: msg,
+      waktu: waktu,
+      ts: Date.now()
+    });
+    localStorage.setItem(SRK,JSON.stringify(arr));
+  }catch(e){}
   var box=document.getElementById('saranTA').parentElement;var ch=box.children;for(var i=0;i<ch.length;i++)ch[i].style.display='none';
   document.getElementById('saranDone').style.display='block';
 }
@@ -917,7 +1029,12 @@ function submitSaran(){
 loadData();
 if(P.length){activePaper=0;renderAll()}
 loadSaran();
+// Auto-refresh saran jika ada perubahan localStorage dari tab lain (mis. saran.html)
+window.addEventListener('storage',function(e){
+  if(e.key===SRK)loadSaran();
+});
 setInterval(function(){if(P.length)autoSave()},30000);
+setInterval(function(){loadSaran()},15000); // refresh tiap 15 detik untuk saran terbaru
 </script>
 </body>
 </html>
