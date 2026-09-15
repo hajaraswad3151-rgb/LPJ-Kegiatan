@@ -6,6 +6,7 @@
 <title>LPJ Kegiatan - Multi Surat</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -119,6 +120,18 @@ tr:hover td{background:#0c0c0c}
 .export-dd button:hover{background:#1A1A1A}
 .export-dd button i{width:16px;text-align:center;color:#5E6AD2;font-size:13px}
 .export-dd .sep{height:1px;background:#222;margin:4px 0}
+/* Mode Warna toggle di dalam export dropdown */
+.export-label{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#555;padding:8px 10px 4px;font-weight:700;font-family:'Inter',sans-serif}
+.color-mode-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:2px 6px 8px}
+.color-mode-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border-radius:8px;border:1px solid #222;background:transparent;color:#8A8F98;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;text-align:center}
+.color-mode-btn:hover{background:#1A1A1A;color:#F7F8F8;border-color:#333}
+.color-mode-btn.active{border-color:#5E6AD2;background:rgba(94,106,210,.12);color:#F7F8F8}
+.color-mode-btn .swatch{width:20px;height:20px;border-radius:50%;border:1px solid #333;margin-bottom:2px}
+.color-mode-btn .swatch-white{background:#fff}
+.color-mode-btn .swatch-dark{background:#0A0A0A}
+.color-mode-btn .cm-label{font-size:11px;font-weight:600}
+.color-mode-btn .cm-desc{font-size:9px;color:#555;line-height:1.2}
+.color-mode-btn.active .cm-desc{color:#8A8F98}
 .reload-spin{animation:spin 1s linear infinite}
 .saldo-box{background:linear-gradient(135deg,rgba(226,179,64,.08),rgba(94,106,210,.05));border:1px solid rgba(226,179,64,.25);border-radius:12px;padding:16px 20px}
 .nota-detail{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:14px;margin-bottom:10px;transition:border-color .3s}
@@ -173,6 +186,20 @@ tr:hover td{background:#0c0c0c}
 <div class="export-menu">
 <button class="btn btn-accent btn-xs" onclick="toggleExport()"><i class="fa-solid fa-download"></i><span class="hidden sm:inline">Export</span></button>
 <div class="export-dd" id="exportDD">
+<div class="export-label">Mode Warna PDF</div>
+<div class="color-mode-row">
+<button type="button" class="color-mode-btn active" data-cmode="white" onclick="setColorMode('white')">
+<span class="swatch swatch-white"></span>
+<span class="cm-label">Putih</span>
+<span class="cm-desc">Untuk Cetak</span>
+</button>
+<button type="button" class="color-mode-btn" data-cmode="dark" onclick="setColorMode('dark')">
+<span class="swatch swatch-dark"></span>
+<span class="cm-label">Hitam</span>
+<span class="cm-desc">Tampilan Asli</span>
+</button>
+</div>
+<div class="sep"></div>
 <button onclick="exportCurrentPDF()"><i class="fa-solid fa-file-pdf"></i>PDF — Surat Aktif</button>
 <button onclick="exportAllPDF()"><i class="fa-solid fa-file-pdf"></i>PDF — Semua Surat</button>
 <div class="sep"></div>
@@ -861,26 +888,183 @@ function delRF(i){collectActive();P[activePaper].rapatFoto.splice(i,1);renderShe
 function toggleExport(){document.getElementById('exportDD').classList.toggle('show')}
 document.addEventListener('click',function(e){if(!e.target.closest('.export-menu')){var dd=document.getElementById('exportDD');if(dd)dd.classList.remove('show')}});
 
-function exportCurrentPDF(){
-  var el=document.getElementById('paperSheet');
-  if(!el){toast('Tidak ada surat','error');return}
-  toggleExport();toast('Membuat PDF...','info');
-  html2pdf().set({margin:10,filename:(P[activePaper]?P[activePaper].nama:'LPJ')+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save().then(function(){toast('PDF berhasil dibuat')});
+// ==================== PDF EXPORT — multi-page, no cutoff, 2 color modes ====================
+var pdfColorMode='white'; // 'white' = untuk cetak (background putih, teks hitam); 'dark' = tampilan asli
+
+function setColorMode(m){
+  pdfColorMode=m;
+  document.querySelectorAll('.color-mode-btn').forEach(function(b){b.classList.toggle('active',b.dataset.cmode===m)});
+  toast(m==='white'?'Mode Putih (cetak) dipilih':'Mode Hitam (asli) dipilih','info');
 }
-function exportAllPDF(){
+
+// Inject CSS override ke clone supaya tampil jadi putih (print-friendly) — dipakai saat pdfColorMode==='white'
+function applyColorModeToClone(clone,isWhite){
+  var st=document.createElement('style');
+  if(isWhite){
+    // MODE PUTIH — konversi semua warna gelap jadi print-friendly
+    st.textContent=
+      '*{color:#000!important;background-color:transparent!important;border-color:#bbb!important;box-shadow:none!important;text-shadow:none!important}'
+      +'.paper-sheet,.sc,.inp,table,th,td,.saran-wrap,.saran-item,.badge,.nota-detail,.modal-box,.sub-st,.section-block,.saldo-box,.modal-items-wrap,.modal-total-bar,.paper-header{background:#fff!important}'
+      +'body,html{background:#fff!important}'
+      +'th{background:#f3f3f3!important;color:#333!important;border-color:#ddd!important}'
+      +'td{border-bottom-color:#eee!important}tr:hover td{background:transparent!important}'
+      +'.inp{background:#fff!important;border-color:#ccc!important;color:#000!important}'
+      +'.paper-sheet{border:1px solid #ddd!important}'
+      +'.paper-sheet::before{background:#5E6AD2!important}'
+      +'.sc{border:1px solid #ddd!important}.sc .n{-webkit-text-fill-color:#000!important;color:#000!important;background:none!important}'
+      +'.badge-green{background:#e8f7ee!important;color:#2d8a4f!important}'
+      +'.badge-red{background:#fde8e8!important;color:#b03b3b!important}'
+      +'.nota-jumlah,.modal-total-bar .val{color:#b03b3b!important}'
+      +'.sub-st{color:#222!important;border-bottom-color:#ddd!important}.sub-st i{color:#5E6AD2!important}'
+      +'.st i{color:#5E6AD2!important}.st .sn{background:#eef0fc!important;color:#5E6AD2!important}'
+      +'.text-secondary{color:#555!important}.text-red{color:#b03b3b!important}.text-green{color:#2d8a4f!important}.text-yellow{color:#a87800!important}'
+      +'.nota-detail{border:1px solid #ddd!important}.foto-item{border:1px solid #ddd!important;background:#fafafa!important}'
+      +'.paper-header{border-bottom-color:#ddd!important}'
+      +'.modal-items-wrap{background:#fafafa!important;border-color:#ddd!important}'
+      +'.modal-total-bar{background:#fff!important;border-color:#e0c97a!important}'
+      +'.nota-items-table .item-jml{color:#b03b3b!important}'
+      +'img,video{filter:none!important}'
+      +'::-webkit-scrollbar{display:none!important}'
+      // Sembunyikan elemen non-cetak
+      +'.no-print,.fab-wrap,.paper-tab-bar,nav,.fab-main,.fab-label,.toast{display:none!important}'
+      +'button{display:none!important}input[type=file]{display:none!important}'
+      +'';
+  }else{
+    // MODE HITAM — pakai warna asli (dark theme) tapi pastikan background solid
+    st.textContent=
+      'body,html{background:#0A0A0A!important}'
+      +'.paper-sheet{background:#0A0A0A!important;color:#F7F8F8!important}'
+      +'.no-print,.fab-wrap,.paper-tab-bar,nav,.fab-main,.fab-label,.toast{display:none!important}'
+      +'button{display:none!important}input[type=file]{display:none!important}'
+      +'::-webkit-scrollbar{display:none!important}';
+  }
+  clone.prepend(st);
+  return clone;
+}
+
+// Render clone ke wrapper off-screen, lalu capture sebagai canvas penuh
+function buildOffscreenWrapper(clone,isWhite){
+  var bg=isWhite?'#ffffff':'#0A0A0A';
+  var w=document.createElement('div');
+  w.style.cssText='position:fixed;left:-99999px;top:0;width:1120px;background:'+bg+';padding:32px;z-index:-1;box-sizing:border-box';
+  w.appendChild(clone);
+  document.body.appendChild(w);
+  return w;
+}
+
+// Slice canvas jadi halaman A4 — menjamin TIDAK ADA konten yang terpotong/hilang
+async function canvasToPDF(canvas,filename,bgColor){
+  var jsPDFCtor=window.jspdf&&window.jspdf.jsPDF;
+  if(!jsPDFCtor){toast('jsPDF belum dimuat','error');return}
+  var pdf=new jsPDFCtor('p','mm','a4');
+  var pageW=210,pageH=297,margin=5;
+  var usableW=pageW-2*margin;
+  var usableH=pageH-2*margin;
+  // Tinggi slice (dalam pixel canvas) yang muat di 1 halaman A4
+  var sliceH=Math.floor(usableH*canvas.width/usableW);
+  var y=0,pageNum=0;
+  while(y<canvas.height){
+    var ch=Math.min(sliceH,canvas.height-y);
+    var slice=document.createElement('canvas');
+    slice.width=canvas.width;
+    slice.height=ch;
+    var ctx=slice.getContext('2d');
+    ctx.fillStyle=bgColor;
+    ctx.fillRect(0,0,slice.width,slice.height);
+    ctx.drawImage(canvas,0,y,canvas.width,ch,0,0,slice.width,ch);
+    var imgData=slice.toDataURL('image/jpeg',0.92);
+    if(pageNum>0)pdf.addPage();
+    var sliceHmm=ch*usableW/canvas.width;
+    pdf.addImage(imgData,'JPEG',margin,margin,usableW,sliceHmm);
+    y+=ch;
+    pageNum++;
+  }
+  pdf.save(filename);
+  return pageNum;
+}
+
+async function exportCurrentPDF(){
+  toggleExport();
+  var el=document.getElementById('paperSheet');
+  if(!el){toast('Tidak ada surat aktif','error');return}
+  collectActive();saveData();
+  toast('Membuat PDF ('+(pdfColorMode==='white'?'Putih':'Hitam')+')...','info');
+  var isWhite=pdfColorMode==='white';
+  var bg=isWhite?'#ffffff':'#0A0A0A';
+  var clone=el.cloneNode(true);
+  clone.id='pdfClone';
+  clone.style.margin='0';
+  clone.style.borderRadius='0';
+  clone.style.boxShadow='none';
+  applyColorModeToClone(clone,isWhite);
+  var wrapper=buildOffscreenWrapper(clone,isWhite);
+  // Beri waktu render
+  await new Promise(function(r){setTimeout(r,250)});
+  try{
+    var canvas=await html2canvas(clone,{
+      scale:2,useCORS:true,backgroundColor:bg,logging:false,
+      windowWidth:1120,windowHeight:Math.max(clone.scrollHeight,800)
+    });
+    if(wrapper.parentNode)document.body.removeChild(wrapper);
+    var n=await canvasToPDF(canvas,(P[activePaper]?P[activePaper].nama:'LPJ')+'.pdf',bg);
+    toast('PDF berhasil ('+n+' halaman)');
+  }catch(e){
+    if(wrapper.parentNode)document.body.removeChild(wrapper);
+    console.error(e);
+    toast('Gagal membuat PDF: '+e.message,'error');
+  }
+}
+
+async function exportAllPDF(){
   toggleExport();
   if(!P.length){toast('Tidak ada surat','error');return}
-  collectActive();saveData();toast('Membuat PDF semua surat...','info');
-  var container=document.createElement('div');container.style.cssText='padding:20px;background:#fff';
-  P.forEach(function(p,idx){activePaper=idx;renderSheet();var clone=document.getElementById('paperSheet').cloneNode(true);clone.style.cssText+='background:#0A0A0A;color:#F7F8F8;padding:32px;border:1px solid #222;border-radius:14px;margin-bottom:40px;page-break-after:always;';container.appendChild(clone)});
+  collectActive();saveData();
+  toast('Membuat PDF semua surat ('+(pdfColorMode==='white'?'Putih':'Hitam')+')...','info');
+  var isWhite=pdfColorMode==='white';
+  var bg=isWhite?'#ffffff':'#0A0A0A';
   var prevActive=activePaper;
-  document.body.appendChild(container);
-  html2pdf().set({margin:10,filename:'LPJ_Semua_Surat.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(container).save().then(function(){document.body.removeChild(container);activePaper=prevActive;renderSheet();toast('PDF semua surat berhasil')});
+  // Bangun container dengan semua sheet
+  var container=document.createElement('div');
+  container.style.cssText='background:'+bg+';';
+  for(var i=0;i<P.length;i++){
+    activePaper=i;
+    renderSheet();
+    await new Promise(function(r){setTimeout(r,60)});
+    var sheet=document.getElementById('paperSheet');
+    if(sheet){
+      var clone=sheet.cloneNode(true);
+      clone.id='pdfSheet'+i;
+      clone.style.cssText+='margin:0 0 48px 0;border-radius:0;box-shadow:none;';
+      applyColorModeToClone(clone,isWhite);
+      container.appendChild(clone);
+    }
+  }
+  // Kembalikan active paper ke semula
+  activePaper=prevActive;
+  renderSheet();
+  // Wrapper off-screen
+  var wrapper=buildOffscreenWrapper(container,isWhite);
+  await new Promise(function(r){setTimeout(r,300)});
+  try{
+    var canvas=await html2canvas(container,{
+      scale:2,useCORS:true,backgroundColor:bg,logging:false,
+      windowWidth:1120,windowHeight:Math.max(container.scrollHeight,800)
+    });
+    if(wrapper.parentNode)document.body.removeChild(wrapper);
+    var n=await canvasToPDF(canvas,'LPJ_Semua_Surat.pdf',bg);
+    toast('PDF semua surat berhasil ('+n+' halaman)');
+  }catch(e){
+    if(wrapper.parentNode)document.body.removeChild(wrapper);
+    console.error(e);
+    toast('Gagal membuat PDF: '+e.message,'error');
+  }
 }
 function exportCurrentDOC(){
   toggleExport();var el=document.getElementById('paperSheet');
   if(!el){toast('Tidak ada surat','error');return}
-  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>LPJ</title><style>body{font-family:Calibri,sans-serif;color:#000;background:#fff}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px 8px;font-size:11px}th{background:#e8e8e8}</style></head><body>'+el.innerHTML+'</body></html>';
+  var clone=el.cloneNode(true);
+  applyColorModeToClone(clone,true);
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>LPJ</title><style>body{font-family:Calibri,sans-serif;color:#000;background:#fff}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px 8px;font-size:11px}th{background:#e8e8e8}img{max-width:100%}</style></head><body>'+clone.innerHTML+'</body></html>';
   var blob=new Blob(['\ufeff',html],{type:'application/msword'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(P[activePaper]?P[activePaper].nama:'LPJ')+'.doc';a.click();URL.revokeObjectURL(a.href);toast('DOC berhasil diunduh');
 }
 function exportCurrentXLSX(){
