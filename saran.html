@@ -3,246 +3,399 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kotak Saran Masyarakat</title>
+<title>Poster Barcode Generator</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@700;800;900&family=Bebas+Neue&family=Montserrat:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
-tailwind.config={theme:{extend:{colors:{bg:'#050505',surface:'#121212',card:'#0A0A0A',primary:'#F7F8F8',secondary:'#8A8F98',accent:'#5E6AD2',green:'#4DAF73',red:'#D45454',border:'#222222'}}}}
+tailwind.config={theme:{extend:{colors:{bg:'#050505',surface:'#121212',card:'#0A0A0A',primary:'#F7F8F8',secondary:'#8A8F98',accent:'#5E6AD2',green:'#4DAF73',yellow:'#E2B340',red:'#D45454',border:'#222222'}}}}
 </script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#050505;color:#F7F8F8;min-height:100vh}
+body{font-family:'Inter',sans-serif;background:#050505;color:#F7F8F8F8;min-height:100vh}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0A0A0A}::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes successPop{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.fade-up{animation:fadeUp .8s ease-out forwards;opacity:0}
-.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.4s}.d5{animation-delay:.5s}
-.inp{background:#0A0A0A;border:1px solid #222;color:#F7F8F8;padding:14px 18px;border-radius:12px;width:100%;font-family:'Inter',sans-serif;font-size:15px;transition:all .3s;outline:none}
-.inp:focus{border-color:#5E6AD2;box-shadow:0 0 0 4px rgba(94,106,210,.12)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp .7s ease-out forwards;opacity:0}
+.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.4s}
+.inp{background:#0A0A0A;border:1px solid #222;color:#F7F8F8F8;padding:12px 16px;border-radius:10px;width:100%;font-family:'Inter',sans-serif;font-size:14px;transition:all .3s;outline:none}
+.inp:focus{border-color:#5E6AD2;box-shadow:0 0 0 3px rgba(94,106,210,.15)}
 .inp::placeholder{color:#444}
-textarea.inp{resize:vertical;min-height:140px;line-height:1.6}
-.btn{padding:14px 28px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:all .3s;border:none;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:10px}
-.btn-accent{background:linear-gradient(135deg,#5E6AD2,#4E5AC2);color:#fff;box-shadow:0 4px 20px rgba(94,106,210,.3)}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(94,106,210,.4)}
-.btn-accent:active{transform:translateY(0)}
-.btn-accent:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-outline{background:transparent;border:1px solid #333;color:#F7F8F8}
-.btn-outline:hover{border-color:#5E6AD2;color:#5E6AD2}
-
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);padding:16px 28px;border-radius:14px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:all .5s cubic-bezier(.22,1,.36,1);max-width:90vw;text-align:center;pointer-events:none}
+select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8F98' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.btn{padding:12px 24px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:all .3s;border:none;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:8px}
+.btn-accent{background:linear-gradient(135deg,#5E6AD2,#4a58c9);color:#fff;box-shadow:0 4px 15px rgba(94,106,210,.3)}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(94,106,210,.4)}
+.btn-green{background:linear-gradient(135deg,#4DAF73,#3d9f63);color:#fff;box-shadow:0 4px 15px rgba(77,175,115,.3)}
+.btn-green:hover{transform:translateY(-2px)}
+.btn-outline{background:transparent;border:1px solid #333;color:#F7F8F8F8}.btn-outline:hover{border-color:#5E6AD2;color:#5E6AD2}
+.btn-sm{padding:8px 16px;font-size:13px}.btn-xs{padding:5px 12px;font-size:11px;border-radius:8px}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:all .5s cubic-bezier(.22,1,.36,1);max-width:90vw;text-align:center;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast-success{background:#4DAF73;color:#fff;box-shadow:0 10px 40px rgba(77,175,115,.3)}
 .toast-error{background:#D45454;color:#fff;box-shadow:0 10px 40px rgba(212,84,84,.3)}
-
-.success-screen{display:none;text-align:center;padding:40px 20px}
-.success-screen.show{display:block;animation:successPop .5s ease-out}
-.success-icon{width:80px;height:80px;border-radius:50%;background:rgba(77,175,115,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;color:#4DAF73}
-
-.glow-line{height:1px;background:linear-gradient(90deg,transparent,#5E6AD2,transparent);margin:30px 0}
-
-.char-count{font-size:12px;color:#555;text-align:right;margin-top:6px;transition:color .3s}
-.char-count.warn{color:#E2B340}
-.char-count.danger{color:#D45454}
-
-.info-card{background:linear-gradient(135deg,rgba(94,106,210,.08),rgba(77,175,115,.05));border:1px solid rgba(94,106,210,.2);border-radius:14px;padding:20px}
-.info-card ol{list-style:decimal;padding-left:20px}
-.info-card li{font-size:13px;color:#8A8F98;line-height:1.8}
-
-@media(max-width:640px){
-  .inp{padding:12px 14px;font-size:14px}
-  .btn{padding:12px 20px;font-size:14px}
-  .success-icon{width:64px;height:64px;font-size:28px}
-}
+.toast-info{background:#5E6AD2;color:#fff;box-shadow:0 10px 40px rgba(94,106,210,.3)}
+.theme-card{border:2px solid #222;border-radius:12px;padding:14px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.theme-card:hover{border-color:#444;transform:translateY(-2px)}
+.theme-card.active{border-color:#5E6AD2;box-shadow:0 0 0 3px rgba(94,106,210,.3)}
+.theme-card.active::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 0 22px 22px;border-color:transparent transparent #5E6AD2 transparent}
+.theme-preview{height:50px;border-radius:6px;margin-bottom:6px;overflow:hidden}
+.bc-type-card{border:1px solid #222;border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;background:#0A0A0A}
+.bc-type-card:hover{border-color:#444;background:#151515}
+.bc-type-card.active{border-color:#5E6AD2;background:rgba(94,106,210,.08)}
+.bc-type-card.active::before{content:'';position:absolute;inset:0;border:2px solid #5E6AD2;border-radius:8px;pointer-events:none}
+.bc-type-card{position:relative}
+.bc-visual{width:52px;height:32px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.bv-batang{flex-direction:row;gap:1px}.bv-batang .bar{width:3px;height:100%;background:#F7F8F8;border-radius:1px}
+.bv-kotak{width:32px;height:32px;border-radius:2px;background:#F7F8F8;position:relative}.bv-kotak .d{position:absolute;width:4px;height:4px;background:#0A0A0A;border-radius:1px}
+.bv-dm{display:grid;grid-template-columns:repeat(5,1);gap:1px;width:32px;height:32px}.bv-dm .c{background:#F7F8F8;border-radius:1px}
+.bv-dml{display:grid;grid-template-columns:repeat(5,1);gap:1px;width:32px;height:32px;position:relative}.bv-dml .c{background:#F7F8F8;border-radius:1px}
+.bv-dml .lc{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0A0A0A;border-radius:2px;z-index:2}
+.bv-qr{width:32px;height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:#F7F8F8}
+.bv-qr::before,.bv-qr::after{content:'';position:absolute;width:6px;height:6px;background:#0A0A0A;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+.bv-qr::after{content:'';position:absolute;width:20px;height:20px;border:2px solid #F7F8F8;border-radius:2px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.loading-overlay{position:absolute;inset:0;background:rgba(5,5,5,.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:4px}
+.loading-spinner{width:40px;height:40px;border:3px solid #222;border-top-color:#5E6AD2;border-radius:50%;animation:spin .8s linear infinite}
+#posterCanvas{width:100%;max-width:600px;aspect-ratio:3/4;border-radius:4px;overflow:hidden;position:relative}
+.poster{width:100%;height:100%;position:relative;display:flex;flex-direction:column;overflow:hidden}
+.t-modern{background:linear-gradient(160deg,#0a0a0a 0%,#111 40%,#0a0a0a 100%)}
+.t-modern .poster-header{padding:8% 8% 0;text-align:center}
+.t-modern .poster-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8%;gap:4%}
+.t-modern .poster-footer{padding:4% 8%;text-align:center}
+.t-neon{background:#050510}
+.t-neon .poster-header{padding:8% 8% 0;text-align:center}
+.t-neon .poster-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8%;gap:4%;box-shadow:inset 0 0 80px rgba(94,106,210,.05)}
+.t-neon .poster-footer{padding:4% 8%;text-align:center}
+.t-clean{background:#ffffff}.t-clean *{color:#111!important}
+.t-clean .poster-header{padding:10% 8% 0;text-align:center}
+.t-clean .poster-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8%;gap:4%}
+.t-clean .poster-footer{padding:4% 8%;text-align:center}
+.t-formal{background:linear-gradient(180deg,#f5f0e8 0%,#e8e0d0 100%);border:3px solid #8b7355}
+.t-formal *{color:#2c2416!important}
+.t-formal .poster-header{padding:6% 8% 2%;text-align:center;border-bottom:2px solid #8b7355;margin:0 8%}
+.t-formal .poster-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4% 8%;gap:3%}
+.t-formal .poster-footer{padding:2% 8% 4%;text-align:center;border-top:1px solid #8b7355;margin:0 8%}
+.t-bold{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.t-bold .poster-header{padding:8% 8% 0;text-align:center}
+.t-bold .poster-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8%;gap:4%}
+.t-bold .poster-footer{padding:4% 8%;text-align:center}
+.t-soft{background:linear-gradient(160deg,#fdf2f8,#f0e6f6 50%,#fdf2f8)}
+.t-soft *{color:#3d2c4e!important}
+.t-soft .poster-header{padding:8% 8% 0;text-align:center}
+.t-soft .poster-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8%;gap:4%}
+.t-soft .poster-footer{padding:4% 8%;text-align:center}
+.loading-spinner{width:40px;height:40px;border:3px solid #222;border-top-color:#5E6AD2;border-radius:50%;animation:spin .8s linear infinite}
+@media(max-width:768px){
+.poster-footer .footer-text{font-size:8px!important}
+.poster-header .header-text{font-size:16px!important}
+.poster-body .body-text{font-size:10px!important}
+.poster-footer .sub-text{font-size:7px!important}
+.bv-type-card{padding:8px 10px}.bv-visual{width:42px;height:28px}
+.bv-kotak,.bv-dm{width:26px;height:26px}.bv-kotak .d{width:3px;height:3px}.bv-dm .c{width:3px;height:3px}
+.bv-qr{width:26px;height:26px;border-radius:4px}.bv-qr::before,.bv-qr::after{width:16px;height:16px}
+.logo-preview img{max-height:60px;border-radius:8px}
+@media print{body{background:#fff!important}.no-print{display:none!important}}
 </style>
 </head>
 <body>
-
-<div class="min-h-screen flex items-center justify-center px-4 py-10">
-<div class="w-full max-w-lg">
-
-  <!-- HEADER -->
-  <div class="text-center mb-8 fade-up">
-    <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/10 border border-accent/20 mb-5" style="animation:float 3s ease-in-out infinite">
-      <i class="fa-solid fa-comment-dots text-accent text-3xl"></i>
-    </div>
-    <h1 class="text-3xl font-extrabold mb-2 fade-up d1">Kotak Saran</h1>
-    <p class="text-secondary text-sm fade-up d2">Sampaikan aspirasi Anda untuk kemajuan lingkungan</p>
-  </div>
-
-  <div class="glow-line fade-up d2"></div>
-
-  <!-- FORM -->
-  <div id="formSection" class="fade-up d3">
-    <div class="space-y-5">
-      <div>
-        <label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block">
-          <i class="fa-solid fa-user mr-1 text-accent"></i>Nama Lengkap <span class="text-red/60 font-normal">(Opsional)</span>
-        </label>
-        <input type="text" class="inp" id="inputNama" placeholder="Masukkan nama Anda..." maxlength="100">
-      </div>
-
-      <div>
-        <label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block">
-          <i class="fa-solid fa-pen mr-1 text-accent"></i>Saran / Masukan <span class="text-red">*</span>
-        </label>
-        <textarea class="inp" id="inputPesan" placeholder="Tulis saran, masukan, atau kritik Anda di sini..." maxlength="2000" oninput="updateCharCount()"></textarea>
-        <div class="char-count" id="charCount">0 / 2000 karakter</div>
-      </div>
-
-      <button class="btn btn-accent w-full" id="btnKirim" onclick="kirimSaran()">
-        <i class="fa-solid fa-paper-plane"></i>Kirim Saran
-      </button>
-    </div>
-
-    <!-- INFO -->
-    <div class="info-card mt-6 fade-up d4">
-      <div class="text-xs text-accent font-semibold uppercase tracking-wider mb-3">
-        <i class="fa-solid fa-circle-info mr-1"></i>Informasi
-      </div>
-      <ol>
-        <li>Saran Anda bersifat <b class="text-primary">rahasia</b> dan hanya akan dibacakan saat rapat pengurus</li>
-        <li>Saran <b class="text-primary">tidak ditampilkan secara publik</b></li>
-        <li>Anda bisa mengirim saran <b class="text-primary">lebih dari satu kali</b></li>
-        <li>Identitas Anda dilindungi — boleh <b class="text-primary">anonim</b></li>
-      </ol>
-    </div>
-  </div>
-
-  <!-- SUCCESS SCREEN -->
-  <div class="success-screen" id="successScreen">
-    <div class="success-icon">
-      <i class="fa-solid fa-check"></i>
-    </div>
-    <h2 class="text-2xl font-bold mb-2">Saran Terkirim</h2>
-    <p class="text-secondary text-sm mb-8 max-w-sm mx-auto">Terima kasih atas partisipasi Anda. Saran akan disampaikan kepada pengurus pada rapat berikutnya.</p>
-
-    <div class="glow-line"></div>
-
-    <button class="btn btn-outline w-full mt-6" onclick="kirimLagi()">
-      <i class="fa-solid fa-rotate-left"></i>Kirim Saran Lagi
-    </button>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="text-center mt-10 fade-up d5">
-    <p class="text-xs text-secondary/40">Kotak Saran Digital — Untuk Masyarakat Setempat</p>
-    <p class="text-[10px] text-secondary/25 mt-1">Data tersimpan secara lokal & aman</p>
-  </div>
-
+<nav class="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-border no-print">
+<div class="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
+<div class="flex items-center gap-3">
+<i class="fa-solid fa-barcode text-accent text-lg"></i>
+<span class="font-bold text-sm">Poster Barcode Generator</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="btn btn-outline btn-xs" onclick="window.open('https://indonesiamajukaribmu.github.io/LPJ-KEGIATAN/','_blank')"><i class="fa-solid fa-arrow-left"></i><span class="hidden sm:inline">LPJ Utama</span></button>
 </div>
 </div>
-
-<!-- TOAST -->
+</nav>
+<main class="max-w-5xl mx-auto px-4 py-8 no-print">
+<div class="text-center mb-10 fade-up">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 mb-5" style="animation:float 3s ease-in-out infinite"><i class="fa-solid fa-barcode text-accent text-2xl"></i></div>
+<h1 class="text-3xl md:text-4xl font-extrabold mb-3 fade-up d1">Poster Barcode Generator</h1>
+<p class="text-secondary text-sm max-w-lg mx-auto fade-up d2">Masukkan link → Pilih barcode → Download poster siap cetak</p>
+</div>
+<div class="grid lg:grid-cols-5 gap-8">
+<div class="lg:col-span-2 space-y-5 fade-up d3">
+<div class="bg-card border border-border rounded-2xl p-5">
+<label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block"><i class="fa-solid fa-link mr-1 text-accent"></i>Link / URL</label>
+<input type="url" class="inp" id="inputLink" placeholder="https://..." oninput="debounceRender()">
+<p class="text-[10px] text-secondary mt-2"><i class="fa-solid fa-circle-info mr-1"></i>Link saran sudah terisi otomatis. Ganti link lain jika perlu.</p>
+</div>
+<div class="bg-card border border-border rounded-2xl p-5">
+<label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block"><i class="fa-solid fa-heading mr-1 text-accent"></i>Judul Poster</label>
+<input type="text" class="inp" id="inputJudul" placeholder="Kotak Saran Masyarakat" oninput="debounceRender()">
+</div>
+<div class="bg-card border border-border rounded-2xl p-5">
+<label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block"><i class="fa-solid fa-pen mr-1 text-accent"></i>Sub Judul (opsional)</label>
+<input type="text" class="inp" id="inputSub" placeholder="Scan QR untuk memberikan saran Anda" oninput="debounceRender()">
+</div>
+<div class="bg-card border border-border rounded-2xl p-5">
+<label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block"><i class="fa-solid fa-building mr-1 text-accent"></i>Nama Instansi</label>
+<input type="text" class="inp" id="inputInstansi" placeholder="Karang Taruna Desa Mekar" oninput="debounceRender()">
+</div>
+<div class="bg-card border border-border rounded-2xl p-5">
+<label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-2 block"><i class="fa-solid fa-image mr-1 text-accent"></i>Logo Organisasi (opsional — muncul di barcode "Kotak + Logo")</label>
+<input type="file" accept="image/png,image/svg,image/jpeg,image/webp" class="inp text-xs" id="inputLogo" onchange="handleLogo(event)">
+<div id="logoPreview" style="display:none;margin-top:8px;text-align:center"><img id="logoPreviewImg" class="max-h-16 rounded-lg border border-border inline-block"></div>
+</div>
+<div class="bg-card border border-border rounded-2xl p-5">
+<label class="text-xs text-secondary font-semibold uppercase tracking-wider mb-3 block"><i class="fa-solid fa-barcode mr-1 text-accent"></i>Bentuk Barcode</label>
+<div class="space-y-2" id="bcTypeList">
+  <div class="bc-type-card active" data-bc="CODE128" onclick="setBcType('CODE128')">
+    <div class="bc-visual bv-batang"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar" style="height:60%"></div><div class="bar"></div><div class="bar" style="height:80%"></div><div class="bar"></div><div class="bar" style="height:40%"></div><div class="bar"></div></div>
+    <div><div class="text-xs font-semibold">Barcode Batang</div><div class="text-[10px] text-secondary">CODE128 — klasik</div></div>
+  </div>
+  <div class="bc-type-card" data-bc="QR" onclick="setBcType('QR')">
+    <div class="bc-visual bv-qr"></div>
+    <div><div class="text-xs font-semibold">Kode Kotak</div><div class="text-[10px] text-secondary">QR Code</div></div>
+  </div>
+  <div class="bc-type-card" data-bc="DATAMATRIX" onclick="setBcType('DATAMATRIX')">
+    <div class="bc-visual bv-dm"></div>
+    <div><div class="text-xs font-semibold">Kode Kotak</div><div class="text-[10px] text-secondary">DataMatrix</div></div>
+  </div>
+  <div class="bc-type-card" data-bc="DATAMATRIX_LOGO" onclick="setBcType('DATAMATRIX_LOGO')">
+    <div class="bc-visual bv-dml"><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="c"></div><div class="lc"><i class="fa-solid fa-star" style="font-size:9px;color:#F7F8F8"></i></div></div>
+    <div><div class="text-xs font-semibold">Kotak + Logo</div><div class="text-[10px] text-secondary">DataMatrix + Logo</div></div>
+  </div>
+</div>
+</div>
+<div class="space-y-2">
+<button class="btn btn-accent w-full justify-center" onclick="downloadPoster('png')"><i class="fa-solid fa-download"></i>Download PNG</button>
+<button class="btn btn-green w-full justify-center" onclick="downloadPoster('jpg')"><i class="fa-solid fa-image"></i>Download JPG</button>
+<button class="btn btn-outline w-full justify-center" onclick="downloadPoster('pdf')"><i class="fa-solid fa-file-pdf"></i>Download PDF</button>
+</div>
+</div>
+<div class="lg:col-span-3 fade-up d4">
+<div class="sticky top-20">
+<div class="text-xs text-secondary font-semibold uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fa-solid fa-eye text-accent"></i>Preview
+<span class="ml-auto badge badge-green text-[9px]">LIVE</span>
+</div>
+<div id="posterCanvas"></div>
+<div class="mt-3 text-center text-[10px] text-secondary">600 × 800 px — Skala sesuai kebutuhan cetak</div>
+</div>
+</div>
+</div>
 <div class="toast" id="toast"></div>
-
 <script>
-const SRK = 'lpj_saran';
-const MAX_CHAR = 2000;
+let currentTheme='modern',currentBcType='CODE128',logoData=null,renderTimer=null;
+const SARAN_URL='https://indonesiamajukaribmu.github.io/LPJ-KEGIATAN/saran.html';
 
-// ==================== CHAR COUNT ====================
-function updateCharCount(){
-  const len = document.getElementById('inputPesan').value.length;
-  const el = document.getElementById('charCount');
-  el.textContent = len + ' / ' + MAX_CHAR + ' karakter';
-  el.className = 'char-count' + (len > MAX_CHAR * 0.9 ? ' danger' : len > MAX_CHAR * 0.75 ? ' warn' : '');
+function toast(m,t='success'){const e=document.getElementById('toast');e.textContent=m;e.className='toast toast-'+t+' show';setTimeout(()=>e.classList.remove('show'),3000)}
+function debounceRender(){clearTimeout(renderTimer);renderTimer=setTimeout(renderPoster,200)}
+function setTheme(t){currentTheme=t;document.querySelectorAll('.theme-card').forEach(c=>c.classList.toggle('active',c.dataset.theme===t));renderPoster()}
+function setBcType(t){currentBcType=t;document.querySelectorAll('.bc-type-card').forEach(c=>c.classList.toggle('active',c.dataset.bc===t));renderPoster()}
+function handleLogo(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{logoData=ev.target.result;document.getElementById('logoPreview').style.display='';document.getElementById('logoPreviewImg').src=logoData;renderPoster()};r.readAsDataURL(f)}
+function getVal(id){return document.getElementById(id)?.value||''}
+
+// Shorten URL for barcode compatibility
+function shortenUrl(url,maxLen){
+  try{
+    const u=new URL(url);
+    const p=u.pathname;
+    if(p.length<=maxLen) return url;
+    const host=u.hostname;
+    if(!host)return url;
+    // Try shorten path
+    const parts=p.split('/').filter(x=>x.length>0);
+    if(parts.length<=1)return url;
+    parts[parts.length-1]='...';
+    return u.origin+parts.join('/');
+  }catch(e){return url}
 }
 
-// ==================== TOAST ====================
-function showToast(msg, type){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast toast-' + type + ' show';
-  setTimeout(() => t.classList.remove('show'), 4000);
-}
-
-// ==================== KIRIM SARAN ====================
-function kirimSaran(){
-  const nama = document.getElementById('inputNama').value.trim();
-  const pesan = document.getElementById('inputPesan').value.trim();
-  const btn = document.getElementById('btnKirim');
-
-  // Validasi
-  if(!pesan){
-    showToast('Saran tidak boleh kosong', 'error');
-    document.getElementById('inputPesan').focus();
-    document.getElementById('inputPesan').style.borderColor = '#D45454';
-    setTimeout(() => document.getElementById('inputPesan').style.borderColor = '', 2000);
-    return;
-  }
-
-  if(pesan.length < 10){
-    showToast('Saran terlalu singkat, minimal 10 karakter', 'error');
-    document.getElementById('inputPesan').focus();
-    return;
-  }
-
-  // Loading state
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Mengirim...';
-
-  // Simulasi delay biar terasa proses (200ms)
-  setTimeout(() => {
-    try {
-      // Ambil data lama
-      let list = [];
-      try { list = JSON.parse(localStorage.getItem(SRK) || '[]'); } catch(e) {}
-
-      // Buat timestamp
-      const now = new Date();
-      const waktu = now.toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'long', year: 'numeric'
-      }) + ' pukul ' + now.toLocaleTimeString('id-ID', {
-        hour: '2-digit', minute: '2-digit'
-      });
-
-      // Push saran baru
-      list.push({
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
-        nama: nama || 'Anonim',
-        pesan: pesan,
-        waktu: waktu
-      });
-
-      // Simpan
-      localStorage.setItem(SRK, JSON.stringify(list));
-
-      // Tampilkan sukses
-      document.getElementById('formSection').style.display = 'none';
-      document.getElementById('successScreen').classList.add('show');
-      showToast('Saran berhasil dikirim!', 'success');
-
-    } catch(e) {
-      showToast('Gagal mengirim. Coba lagi.', 'error');
+function generateBarcode(link,type){
+  const id='bc-'+Date.now();
+  const div=document.createElement('div');div.id=id;document.body.appendChild(div);
+  let svgStr='';
+  try{
+    if(type==='QR'){
+      JsBarcode('#'+id,shortenUrl(link,80),{format:'QRCODE',width:2,height:80,displayValue:false,margin:0,fontSize:0});
+    }else if(type==='DATAMATRIX'||type==='DATAMATRIX_LOGO'){
+      JsBarcode('#'+id,shortenUrl(link,80),{format:'DATAMATRIX',width:2,height:80,displayValue:false,margin:0,fontSize:0});
+    }else{
+      JsBarcode('#'+id,shortenUrl(link,80),{format:'CODE128',width:2,height:80,displayValue:false,margin:0,fontSize:0});
     }
-
-    // Reset button
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>Kirim Saran';
-  }, 300);
+    svgStr=div.querySelector('svg')?.outerHTML||'';
+    document.body.removeChild(div);
+    if(type==='DATAMATRIX_LOGO'&&logoData){
+      const logoSvg=`<image href="${logoData}" x="50%" y="50%" width="20%" height="20%" preserveAspectRatio="xMidYMid meet"/>`;
+      svgStr=svgStr.replace('</svg>','</svg>'+logoSvg);
+    }
+    return svgStr;
+  }catch(e){
+    document.body.removeChild(div);
+    // Ultimate fallback — force QR
+    try{
+      const div2=document.createElement('div');div2.id=id+'f';document.body.appendChild(div2);
+      JsBarcode('#'+id+'f',shortenUrl(link,80),{format:'QRCODE',width:2,height:80,displayValue:false,margin:0,fontSize:0});
+      svgStr=div2.querySelector('svg')?.outerHTML||'';
+      document.body.removeChild(div2);
+    }catch(e2){return''}
+  }
 }
 
-// ==================== KIRIM LAGI ====================
-function kirimLagi(){
-  document.getElementById('inputNama').value = '';
-  document.getElementById('inputPesan').value = '';
-  updateCharCount();
-  document.getElementById('successScreen').classList.remove('show');
-  document.getElementById('formSection').style.display = '';
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function renderPoster(){
+  const link=getVal('inputLink').trim()||SARAN_URL;
+  const judul=getVal('inputJudul').trim()||'Kotak Saran Masyarakat';
+  const sub=getVal('inputSub').trim();
+  const inst=getVal('inputInstansi').trim();
+  const container=document.getElementById('posterCanvas');
+  if(!link){container.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#333"><i class="fa-solid fa-barcode" style="font-size:48px;opacity:.15"></i><p style="font-size:14px;opacity:.3">Masukkan link untuk melihat preview</p></div>`;return}
+  container.innerHTML=`<div class="loading-overlay"><div class="loading-spinner"></div></div>`;
+  setTimeout(()=>{
+    try{
+      const svg=generateBarcode(link,currentBcType);
+      const now=new Date();
+      const tgl=now.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+      const bcLabel={CODE128:'Barcode Batang',QR:'QR Code',DATAMATRIX:'DataMatrix',DATAMATRIX_LOGO:'DataMatrix + Logo'};
+      const bcL=bcLabel[currentBcType]||'Barcode';
+      const themes={modern:buildModern,neon:buildNeon,clean:buildClean,formal:buildFormal,bold:buildBold,soft:buildSoft};
+      container.innerHTML=`<div class="poster t-${currentTheme}">${themes[currentTheme](svg,judul,sub,inst,link,tgl,bcL)}</div>`;
+    }catch(e){
+      container.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#D45454;flex-direction:column;gap:12px"><i class="fa-solid fa-triangle-exclamation" style="font-size:32px"></i><p style="font-size:14px">Gagal generate barcode</p><p style="font-size:11px;color:#888">Coba ganti bentuk barcode atau periksa link</p></div>`;
+    }
+  },80);
 }
 
-// ==================== INIT ====================
-document.addEventListener('DOMContentLoaded', () => {
-  updateCharCount();
+function buildModern(svg,judul,sub,inst,link,tgl,bcL){
+  return`<div class="poster-header">
+    <div class="header-text" style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#F7F8F8">${esc(inst)}</div>
+    <div style="width:60px;height:3px;background:linear-gradient(90deg,#5E6AD2,#4DAF73,#E2B340);border-radius:2px;margin:8px auto 0"></div>
+  </div>
+  <div class="poster-body">
+    <div style="text-align:center;margin-bottom:8px"><i class="fa-solid fa-barcode" style="font-size:20px;color:#5E6AD2;opacity:.4"></i></div>
+    <div class="body-text" style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:#F7F8F8;text-align:center;line-height:1.2">${esc(judul)}</div>
+    ${sub?`<div class="body-text" style="font-size:12px;color:#8A8F98;text-align:center;margin-top:8px;line-height:1.5">${esc(sub)}</div>`:''}
+    <div style="margin:12px 0;width:85%;max-width:320px">${svg}</div>
+    <div class="body-text" style="font-size:9px;color:#555;text-align:center;word-break:break-all;max-width:90%;line-height:1.4;margin-top:6px">${esc(link)}</div>
+    <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border:1px solid #1a1a1a;border-radius:20px"><i class="fa-solid fa-barcode" style="font-size:9px;color:#555"></i><span style="font-size:9px;color:#555">${bcL}</span></div>
+  </div>
+  <div class="poster-footer">
+    <div class="footer-text" style="font-size:9px;color:#555">Scan kode di atas untuk mengakses halaman</div>
+    <div class="sub-text" style="font-size:7px;color:#333;margin-top:4px">${esc(tgl)}</div>
+  </div>`;
+}
 
-  // Auto-focus ke textarea
-  setTimeout(() => {
-    document.getElementById('inputPesan').focus();
-  }, 1000);
-});
+function buildNeon(svg,judul,sub,inst,link,tgl,bcL){
+  return`<div class="poster-header">
+    <div class="header-text" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:#5E6AD2;text-shadow:0 0 20px rgba(94,106,210,.5)">${esc(inst)}</div>
+    <div style="height:2px;background:linear-gradient(90deg,transparent,#5E6AD2,transparent);margin:10px 10% 0"></div>
+  </div>
+  <div class="poster-body" style="box-shadow:inset 0 0 80px rgba(94,106,210,.05)">
+    <div style="text-align:center;margin-bottom:10px"><div style="width:50px;height:50px;border-radius:50%;border:2px solid #5E6AD2;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(94,106,210,.3)"><i class="fa-solid fa-qrcode" style="font-size:20px;color:#5E6AD2"></i></div></div>
+    <div class="body-text" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:#F7F8F8;text-align:center;text-shadow:0 0 30px rgba(94,106,210,.4);letter-spacing:2px">${esc(judul)}</div>
+    ${sub?`<div class="body-text" style="font-size:11px;color:#5E6AD2;text-align:center;margin-top:10px;text-shadow:0 0 10px rgba(94,106,210,.3)">${esc(sub)}</div>`:''}
+    <div style="margin:16px 0;padding:12px;border:1px solid rgba(94,106,210,.2);border-radius:8px;background:rgba(94,106,210,.03);width:85%;max-width:340px">${svg}</div>
+    <div class="body-text" style="font-size:8px;color:#4a4a6a;text-align:center;word-break:break-all;max-width:90%">${esc(link)}</div>
+    <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border:1px solid rgba(94,106,210,.2);border-radius:20px"><i class="fa-solid fa-barcode" style="font-size:9px;color:#5E6AD2"></i><span style="font-size:9px;color:#5E6AD2;font-weight:600">${bcL}</span></div>
+  </div>
+  <div class="poster-footer" style="border-top:1px solid rgba(94,106,210,.15)">
+    <div class="footer-text" style="color:#5E6AD2;font-weight:600;letter-spacing:2px;text-transform:uppercase;font-size:10px">SCAN SEKARANG</div>
+    <div class="sub-text" style="color:#3a3a5a">${esc(tgl)}</div>
+  </div>`;
+}
+
+function buildClean(svg,judul,sub,inst,link,tgl,bcL){
+  return`<div class="poster-header" style="padding:10% 8% 0">
+    <div class="header-text" style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;color:#111;letter-spacing:2px;text-transform:uppercase">${esc(inst)}</div>
+    <div style="width:60px;height:3px;background:#111;border-radius:2px;margin:10px auto 0"></div>
+  </div>
+  <div class="poster-body">
+    <div style="width:50px;height:50px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;margin-bottom:12px"><i class="fa-solid fa-barcode" style="font-size:20px;color:#aaa"></i></div>
+    <div class="body-text" style="font-family:'Poppins',sans-serif;font-size:22px;font-weight:700;color:#111;text-align:center">${esc(judul)}</div>
+    ${sub?`<div class="body-text" style="font-size:11px;color:#666;text-align:center;margin-top:8px">${esc(sub)}</div>`:''}
+    <div style="margin:16px 0;width:85%;max-width:320px">${svg}</div>
+    <div class="body-text" style="font-size:8px;color:#999;text-align:center;word-break:break-all;max-width:90%">${esc(link)}</div>
+    <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid #ddd;border-radius:20px"><i class="fa-solid fa-barcode" style="font-size:9px;color:#aaa"></i><span style="font-size:9px;color:#999">${bcL}</span></div>
+  </div>
+  <div class="poster-footer">
+    <div class="footer-text" style="color:#666">Scan kode di atas untuk mengakses halaman</div>
+    <div class="sub-text" style="color:#aaa">${esc(tgl)}</div>
+  </div>`;
+}
+
+function buildFormal(svg,judul,sub,inst,link,tgl,bcL){
+  return`<div class="poster-header">
+    <div class="header-text" style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;font-style:italic;color:#3d2c1e">${esc(inst)}</div>
+    <div style="font-size:8px;color:#8b7355;letter-spacing:3px;text-transform:uppercase;margin-top:4px">Undangan</div>
+  </div>
+  <div class="poster-body">
+    <div style="width:48px;height:48px;border:2px solid #8b7355;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:12px"><i class="fa-solid fa-qrcode" style="font-size:18px;color:#8b7355"></i></div>
+    <div class="body-text" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#2c2416;text-align:center;font-style:italic">${esc(judul)}</div>
+    ${sub?`<div class="body-text" style="font-size:11px;color:#6b5c4d;text-align:center;margin-top:8px;font-style:italic">${esc(sub)}</div>`:''}
+    <div style="margin:14px 0;border:1px solid #d4c5a9;padding:10px;border-radius:4px;width:90%;max-width:340px;background:rgba(139,115,85,.05)">${svg}</div>
+    <div class="body-text" style="font-size:8px;color:#8b7355;text-align:center;word-break:break-all;max-width:90%">${esc(link)}</div>
+    <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid #d4c5a9;border-radius:20px"><i class="fa-solid fa-barcode" style="font-size:9px;color:#8b7355"></i><span style="font-size:9px;color:#8b7355">${bcL}</span></div>
+  </div>
+  <div class="poster-footer">
+    <div class="footer-text" style="color:#6b5c4d;font-style:italic">Harap memindai kode di atas</div>
+    <div class="sub-text" style="color:#a09080">${esc(tgl)}</div>
+  </div>`;
+}
+
+function buildBold(svg,judul,sub,inst,link,tgl,bcL){
+  return`<div class="poster-header" style="background:linear-gradient(180deg,rgba(94,106,210,.15),transparent)">
+    <div class="header-text" style="font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;color:#F7F8F8;letter-spacing:3px;text-transform:uppercase">${esc(inst)}</div>
+    <div style="height:3px;width:60px;background:#5E6AD2;margin:8px auto 0;border-radius:2px"></div>
+  </div>
+  <div class="poster-body">
+    <div style="width:60px;height:60px;border-radius:14px;background:rgba(94,106,210,.15);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><i class="fa-solid fa-barcode" style="font-size:24px;color:#5E6AD2"></i></div>
+    <div class="body-text" style="font-family:'Oswald',sans-serif;font-size:30px;color:#F7F8F8;text-align:center;letter-spacing:2px;text-transform:uppercase">${esc(judul)}</div>
+    ${sub?`<div class="body-text" style="font-size:12px;color:#8A8F98;text-align:center;margin-top:10px">${esc(sub)}</div>`:''}
+    <div style="margin:16px 0;padding:14px;background:rgba(94,106,210,.06);border:1px solid rgba(94,106,210,.15);border-radius:10px;width:85%;max-width:340px">${svg}</div>
+    <div class="body-text" style="font-size:8px;color:#556;text-align:center;word-break:break-all;max-width:90%">${esc(link)}</div>
+    <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid rgba(94,106,210,.2);border-radius:20px;background:rgba(94,106,210,.05)"><i class="fa-solid fa-barcode" style="font-size:9px;color:#5E6AD2"></i><span style="font-size:9px;color:#5E6AD2;font-weight:600">${bcL}</span></div>
+  </div>
+  <div class="poster-footer">
+    <div class="footer-text" style="color:#5E6AD2;font-weight:600;letter-spacing:2px;text-transform:uppercase;font-size:10px">SCAN SEKARANG</div>
+    <div class="sub-text" style="color:#556">${esc(tgl)}</div>
+  </div>`;
+}
+
+function buildSoft(svg,judul,sub,inst,link,tgl,bcL){
+  return`<div class="poster-header">
+    <div class="header-text" style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:600;color:#3d2c4e">${esc(inst)}</div>
+    <div style="height:2px;width:60px;background:linear-gradient(90deg,transparent,#c9a0dc,transparent);border-radius:2px;margin:8px auto 0"></div>
+  </div>
+  <div class="poster-body">
+    <div style="width:52px;height:52px;border-radius:50%;background:rgba(201,160,220,.2);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><i class="fa-solid fa-qrcode" style="font-size:20px;color:#9b72b0"></i></div>
+    <div class="body-text" style="font-family:'Poppins',sans-serif;font-size:24px;font-weight:700;color:#3d2c4e;text-align:center">${esc(judul)}</div>
+    ${sub?`<div class="body-text" style="font-size:11px;color:#7c6a8e;text-align:center;margin-top:10px">${esc(sub)}</div>`:''}
+    <div style="margin:14px 0;padding:12px;border:1px solid rgba(201,160,220,.2);border-radius:12px;background:rgba(201,160,220,.05);width:85%;max-width:320px">${svg}</div>
+    <div class="body-text" style="font-size:8px;color:#8a7a94;text-align:center;word-break:break-all;max-width:90%">${esc(link)}</div>
+    <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid rgba(201,160,220,.3);border-radius:20px"><i class="fa-solid fa-barcode" style="font-size:9px;color:#9b72b0"></i><span style="font-size:9px;color:#9b72b0">${bcL}</span></div>
+  </div>
+  <div class="poster-footer">
+    <div class="footer-text" style="color:#9b72b0;font-weight:500">Scan kode untuk mengakses</div>
+    <div class="sub-text" style="color:#a090a0">${esc(tgl)}</div>
+  </div>`;
+}
+
+async function downloadPoster(format){
+  const poster=document.querySelector('.poster');
+  if(!poster){toast('Poster belum tersedia','error');return}
+  toast('Memproses download...','info');
+  try{
+    const canvas=await html2canvas(poster,{scale:3,useCORS:true,backgroundColor:currentTheme==='clean'||currentTheme==='formal'||currentTheme==='soft'?'#ffffff':null,logging:false});
+    if(format==='pdf'){
+      const imgData=canvas.toDataURL('image/jpeg',0.95);
+      const w=window.open('');w.document.write(`<html><head><title>Poster</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${imgData}" style="max-width:100%;max-height:100vh;object-fit:contain"></body></html>`);w.document.close();
+      toast('PDF dibuka — File → Print → Save as PDF','info');return;
+    }
+    const ext=format==='jpg'?'jpeg':'png';
+    const a=document.createElement('a');
+    a.href=canvas.toDataURL(`image/${ext}`,0.95);
+    a.download=`poster-barcode-${Date.now()}.${format}`;
+    a.click();
+    toast(`${format.toUpperCase()} berhasil diunduh`);
+  }catch(e){console.error(e);toast('Gagal mengunduh','error')}
+}
+document.addEventListener('DOMContentLoaded',()=>{renderPoster()});
 </script>
 </body>
 </html>
